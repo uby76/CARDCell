@@ -1,24 +1,24 @@
-# SRR6468562 example
+# SRR6468562 示例
 
-This example contains the paired non-human metagenomic reads and the compact result tables produced by CARDCell.
+本示例包含一组去除人源序列后的双端宏基因组数据，以及 CARDCell 生成的精简结果表。
 
-## Input
+## 输入文件
 
 - `input/SRR6468562.nonhuman_R1.fastq.gz`
 - `input/SRR6468562.nonhuman_R2.fastq.gz`
 
-Each mate contains 469,775 reads. The combined mean read length is 96.212222872652 bp.
+R1 和 R2 各包含 469,775 条序列，合并平均读长为 96.212222872652 bp。
 
-SHA-256 checksums:
+SHA-256 校验值：
 
 ```text
 99a72d9f47083ba3764bd5f6f7ba567d785d05157260a00985f1e85e24770ddb  SRR6468562.nonhuman_R1.fastq.gz
 05ad9f34994335d765ca0521c0e39f9a37cdc3cfcd2159770aac05be5f440766  SRR6468562.nonhuman_R2.fastq.gz
 ```
 
-## Re-run
+## 重新运行
 
-From the repository root:
+在仓库根目录运行：
 
 ```bash
 bin/cardoap_kma16s \
@@ -32,14 +32,14 @@ bin/cardoap_kma16s \
   --metaxa-env-bin /path/to/metaxa2_dependency_bin
 ```
 
-The published compact outputs are under `expected_results/`. Large SAM/BAM and temporary files are intentionally excluded.
+已发布的精简结果位于 `expected_results/`。大型 SAM/BAM 和临时文件未纳入仓库。
 
-Expected headline result:
+预期核心结果：
 
 ```text
-Bacterial 16S reads: 406
-Cell-equivalent coverage: 5.455958682164
-CARD references detected: 15
-Total KMA ARG Depth: 5.600000000000
-Total ARG copies/cell: 1.026400734722
+细菌 16S 序列数：406
+细胞等效覆盖度：5.455958682164
+检出的 CARD 参考序列数：15
+KMA ARG 总深度：5.600000000000
+每细胞 ARG 总拷贝数：1.026400734722
 ```
