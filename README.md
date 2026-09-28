@@ -8,9 +8,30 @@ CARDCell is a standalone, resumable pipeline for quantifying ARG abundance in pa
 git clone git@github.com:uby76/CARDCell.git
 cd CARDCell
 chmod +x bin/cardoap_kma16s
+bash scripts/install.sh
 ```
 
-Requirements include Python 3.9 or later, RGI with its KMA, samtools, and bamtools runtime dependencies, a loaded canonical CARD local database, and Metaxa2 2.2.3 with its SSU database. The rrnDB 5.10 pan-taxa NCBI statistics table and the 6,059-entry CARD-OAP class annotation database are included. Users do not need to download or reorganize the class annotation table. CARD and Metaxa2 databases are not downloaded or replaced automatically.
+The only prerequisite for automatic installation is Conda or Mamba. `scripts/install.sh` creates two isolated, repository-local environments and downloads the official databases into `.cardcell/`:
+
+```text
+.cardcell/
+├── envs/rgi/                 RGI 6.0.8, KMA, samtools, bamtools
+├── envs/metaxa2/             Perl, HMMER, BLAST, MAFFT, VSEARCH
+├── software/Metaxa2_2.2.3/  Metaxa2 and its bundled SSU database
+└── databases/card/localDB/  current official canonical CARD database
+```
+
+Two environments are intentional. The Bioconda `metaxa=2.2.3` recipe pins obsolete BLAST/HMMER releases that are not resolvable on current Apple Silicon systems; installing the official Metaxa2 2.2.3 program and database with current compatible dependencies is reproducible across macOS and Linux. The pipeline finds these paths automatically. `.cardcell/` is ignored by Git because generated environments and databases are platform-specific.
+
+The normal total network transfer is below 1 GB: the pinned official Metaxa2 archive is 47.8 MB, while Conda packages and the current CARD canonical archive vary by platform/version. The installer prints this information before downloading. It reuses an existing valid installation and does not overwrite it. To verify all components:
+
+```bash
+bash scripts/check_installation.sh
+```
+
+To install software first and defer CARD download, use `bash scripts/install.sh --skip-card-db`. To refresh CARD later while preserving the previous database as a timestamped backup, use `bash scripts/install.sh --force-card-db`.
+
+The rrnDB 5.10 pan-taxa NCBI statistics table and the 6,059-entry CARD-OAP class annotation database are already included in the repository. Users do not need to download or reorganize either table.
 
 ## Method overview
 
@@ -64,17 +85,14 @@ bin/cardoap_kma16s \
   --r2 sample_R2.fastq.gz \
   --sample SAMPLE_ID \
   --outdir results \
-  --threads 8 \
-  --card-local-db /path/to/localDB \
-  --metaxa-dir /path/to/Metaxa2_2.2.3 \
-  --metaxa-env-bin /path/to/metaxa2_dependency_bin
+  --threads 8
 ```
 
-By default, the pipeline uses `resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv`. A different current official pan-taxa NCBI statistics table can be supplied with `--rrndb FILE`. CARD is never downloaded or replaced automatically.
+By default, the pipeline uses `resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv`. A different current official pan-taxa NCBI statistics table can be supplied with `--rrndb FILE`. CARD is downloaded only by the explicit installation command; analysis runs never download or replace databases.
 
 The pipeline also uses `resources/CARD_OAP_full_6059_annotation.csv` automatically. Its `Class` field directly replaces the original multi-label CARD/RGI `Drug Class` field in all primary result tables. Matching is performed by exact ARO accession. The bundled database contains one unique class for each of 6,059 ARO accessions, so no fractional allocation across multiple drug classes is used. An alternative compatible table can be supplied with `--card-oap-annotation FILE`, but no separate download is required for normal use.
 
-If RGI, Metaxa2, or their databases are not available in the default locations, specify them with `--rgi-bin`, `--card-local-db`, `--metaxa-dir`, and `--metaxa-env-bin`. To list all options:
+For a custom external installation, override the automatic paths with `--rgi-bin`, `--card-local-db`, `--metaxa-dir`, and `--metaxa-env-bin`. To list all options:
 
 ```bash
 bin/cardoap_kma16s --help
@@ -133,10 +151,7 @@ bin/cardoap_kma16s \
   --r2 examples/SRR6468562/input/SRR6468562.nonhuman_R2.fastq.gz \
   --sample SRR6468562 \
   --outdir results \
-  --threads 8 \
-  --card-local-db /path/to/localDB \
-  --metaxa-dir /path/to/Metaxa2_2.2.3 \
-  --metaxa-env-bin /path/to/metaxa2_dependency_bin
+  --threads 8
 ```
 
 The validation command, output, and numerical audit are documented in `workflow.log`. Software and database versions are listed in `environment_versions.txt`.

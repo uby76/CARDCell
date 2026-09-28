@@ -1,0 +1,10 @@
+name: cardcell-rgi
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - rgi=6.0.8
+  - kma>=1.6
+  - samtools>=1.20
+  - bamtools>=2.5
+  - wget

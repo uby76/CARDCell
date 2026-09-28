@@ -1,0 +1,14 @@
+name: cardcell-metaxa2-dependencies
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - perl=5.32
+  - hmmer>=3.4
+  - blast>=2.16
+  - mafft>=7.5
+  - vsearch>=2.29
+  - perl-archive-tar
+  - perl-io-compress
+  - perl-json
+  - perl-list-moreutils

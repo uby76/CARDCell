@@ -11,7 +11,7 @@ PIPELINE = Path(__file__).resolve().parent.parent
 
 
 def executable(name, explicit=None):
-    candidates = [explicit, shutil.which(name), f"/opt/homebrew/Caskroom/miniconda/base/envs/rgi/bin/{name}"]
+    candidates = [explicit, PIPELINE / ".cardcell/envs/rgi/bin" / name, shutil.which(name)]
     for value in candidates:
         if value and Path(value).is_file() and os.access(value, os.X_OK):
             return str(Path(value).resolve())
@@ -88,22 +88,24 @@ def main():
     print(f"Validated {validate_pair_names(r1, r2)} read pairs")
 
     rgi = executable("rgi", args.rgi_bin)
-    card_db = Path(args.card_local_db).resolve() if args.card_local_db else (PIPELINE.parent / "localDB").resolve()
+    card_db = Path(args.card_local_db).resolve() if args.card_local_db else (PIPELINE / ".cardcell/databases/card/localDB").resolve()
     if not valid_files([card_db / "card.json", card_db / "card_reference.fasta"]):
-        raise SystemExit("Valid CARD localDB not found; supply --card-local-db. It will not be downloaded automatically.")
+        raise SystemExit("Valid CARD localDB not found. Run scripts/install.sh or supply --card-local-db.")
     rrndb = Path(args.rrndb).resolve() if args.rrndb else PIPELINE / "resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv"
     if not rrndb.is_file(): raise SystemExit("rrnDB pan-taxa table missing; supply --rrndb")
     card_oap_annotation = Path(args.card_oap_annotation).resolve() if args.card_oap_annotation else PIPELINE / "resources/CARD_OAP_full_6059_annotation.csv"
     if not card_oap_annotation.is_file():
         raise SystemExit("Bundled CARD-OAP class annotation database is missing; supply --card-oap-annotation")
 
+    bundled_metaxa = PIPELINE / ".cardcell/software/Metaxa2_2.2.3"
     metaxa_exe = shutil.which("metaxa2")
-    metaxa = Path(args.metaxa_dir).resolve() if args.metaxa_dir else (Path(metaxa_exe).resolve().parent if metaxa_exe else Path("/nonexistent"))
+    metaxa = Path(args.metaxa_dir).resolve() if args.metaxa_dir else (bundled_metaxa if bundled_metaxa.is_dir() else (Path(metaxa_exe).resolve().parent if metaxa_exe else Path("/nonexistent")))
     if not valid_files([metaxa / "metaxa2", metaxa / "metaxa2_db/SSU/HMMs/B.hmm", metaxa / "metaxa2_db/SSU/blast.nhr"]):
-        raise SystemExit("Metaxa2 program/SSU database missing; supply --metaxa-dir")
+        raise SystemExit("Metaxa2 program/SSU database missing. Run scripts/install.sh or supply --metaxa-dir.")
     hmmscan_exe = shutil.which("hmmscan")
-    metaxa_env_bin = Path(args.metaxa_env_bin).resolve() if args.metaxa_env_bin else (Path(hmmscan_exe).resolve().parent if hmmscan_exe else Path("/nonexistent"))
-    if not (metaxa_env_bin / "hmmscan").is_file(): raise SystemExit("Metaxa2 dependency bin missing; supply --metaxa-env-bin")
+    bundled_metaxa_bin = PIPELINE / ".cardcell/envs/metaxa2/bin"
+    metaxa_env_bin = Path(args.metaxa_env_bin).resolve() if args.metaxa_env_bin else (bundled_metaxa_bin if bundled_metaxa_bin.is_dir() else (Path(hmmscan_exe).resolve().parent if hmmscan_exe else Path("/nonexistent")))
+    if not (metaxa_env_bin / "hmmscan").is_file(): raise SystemExit("Metaxa2 dependency bin missing. Run scripts/install.sh or supply --metaxa-env-bin.")
 
     prefix = rgi_dir / args.sample
     rgi_required = [Path(str(prefix)+x) for x in (".allele_mapping_data.txt", ".gene_mapping_data.txt", ".sorted.length_100.bam", ".sorted.length_100.bam.bai", ".temp.sam.temp.res", ".temp.sam.temp.aln")]

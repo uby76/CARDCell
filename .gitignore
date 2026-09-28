@@ -1,6 +1,7 @@
 __pycache__/
 *.py[cod]
 .DS_Store
+.cardcell/
 
 # User-generated runs can be large. The curated example is kept under examples/.
 results/
