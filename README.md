@@ -20,7 +20,7 @@ Cell denominator: FASTQ → Metaxa2 bacterial 16S → 16S coverage → taxonomy 
 Final result: ARG copies/cell = KMA Depth / cell-equivalent coverage
 ```
 
-The pipeline combines **CARD/KMA ARG profiling** with **Zhu et al. 2025-style bacterial cell normalization based on 16S and rrnDB**. The complete pipeline should not be described as the original Zhu et al. 2025 workflow; only the cell denominator follows its 16S normalization concept.
+The pipeline combines **CARD/KMA ARG profiling** with **[Zhu et al. 2025](https://doi.org/10.1038/s41467-025-59019-3)-style bacterial cell normalization based on 16S and rrnDB**. The complete pipeline should not be described as the original Zhu et al. 2025 workflow; only the cell denominator follows its 16S normalization concept.
 
 ## Core formulas
 
@@ -39,7 +39,7 @@ ARG_copies_per_cell
   = KMA-reported_CARD_reference_Depth / cell_equivalent_coverage
 ```
 
-The 1,432 bp reference length is the average bacterial 16S rRNA gene length used by Zhu et al. 2025. The ARG numerator is taken exclusively from the `Depth` field in the RGI-bwt/KMA `allele_mapping_data.txt` output. It is explicitly referred to as **KMA-reported CARD reference Depth**.
+The 1,432 bp reference length is the average bacterial 16S rRNA gene length used by [Zhu et al. 2025](https://doi.org/10.1038/s41467-025-59019-3). The ARG numerator is taken exclusively from the `Depth` field in the RGI-bwt/KMA `allele_mapping_data.txt` output. It is explicitly referred to as **KMA-reported CARD reference Depth**.
 
 The following are excluded from the primary calculation: BAM-derived mean depth, ARGs-OAP KO30 nCell, the experimental KMA-KO30 database, assembly, ORF prediction, DIAMOND, BLASTX, DeepARG, and Kraken2/Bracken. RGI internally generates BAM files and invokes samtools/bamtools, but the CARDCell calculation code does not read BAM files.
 
@@ -135,3 +135,7 @@ bin/cardoap_kma16s \
 ```
 
 The validation command, output, and numerical audit are documented in `workflow.log`. Software and database versions are listed in `environment_versions.txt`.
+
+## Reference
+
+Zhu, C., Wu, L., Ning, D. *et al.* Global diversity and distribution of antibiotic resistance genes in human wastewater treatment systems. *Nature Communications* **16**, 4006 (2025). [https://doi.org/10.1038/s41467-025-59019-3](https://doi.org/10.1038/s41467-025-59019-3)
