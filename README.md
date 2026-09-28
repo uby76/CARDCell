@@ -1,8 +1,8 @@
-# CARDCell：基于 CARD/KMA 与 16S 的 ARG 细胞归一化流程
+# CARDCell: CARD/KMA ARG Quantification with 16S-Based Cell Normalization
 
-CARDCell 是一套独立、可续跑的双端宏基因组定量流程。
+CARDCell is a standalone, resumable pipeline for quantifying ARG abundance in paired-end metagenomic data.
 
-## 获取仓库
+## Clone the repository
 
 ```bash
 git clone git@github.com:uby76/CARDCell.git
@@ -10,21 +10,21 @@ cd CARDCell
 chmod +x bin/cardoap_kma16s
 ```
 
-运行前需要：Python 3.9 或更高版本、RGI（含 KMA、samtools、bamtools 运行依赖）、已加载的 CARD 标准本地数据库、Metaxa2 2.2.3 及其 SSU 数据库。仓库已包含 rrnDB 5.10 泛分类群 NCBI 统计表；CARD 和 Metaxa2 数据库不会自动下载或替换。
+Requirements include Python 3.9 or later, RGI with its KMA, samtools, and bamtools runtime dependencies, a loaded canonical CARD local database, and Metaxa2 2.2.3 with its SSU database. The rrnDB 5.10 pan-taxa NCBI statistics table is included. CARD and Metaxa2 databases are not downloaded or replaced automatically.
 
-## 方法一句话说明
+## Method overview
 
 ```text
-ARG 分子：FASTQ → RGI-bwt/KMA → CARD → KMA 报告的 CARD 参考序列深度
-细胞分母：FASTQ → Metaxa2 细菌 16S → 16S 覆盖度 → 分类组成 → rrnDB → 细胞等效覆盖度
-最终结果：每细胞 ARG 拷贝数 = KMA 深度 / 细胞等效覆盖度
+ARG numerator: FASTQ → RGI-bwt/KMA → CARD → KMA-reported CARD reference Depth
+Cell denominator: FASTQ → Metaxa2 bacterial 16S → 16S coverage → taxonomy → rrnDB → cell-equivalent coverage
+Final result: ARG copies/cell = KMA Depth / cell-equivalent coverage
 ```
 
-本流程把 **CARD/KMA ARG 分析**与 **Zhu 等（2025）风格的 16S + rrnDB 细菌细胞归一化**结合。不要把整套流程称为 Zhu 等（2025）的原始流程；只有细胞分母采用该文描述的 16S 归一化思想。
+The pipeline combines **CARD/KMA ARG profiling** with **Zhu et al. 2025-style bacterial cell normalization based on 16S and rrnDB**. The complete pipeline should not be described as the original Zhu et al. 2025 workflow; only the cell denominator follows its 16S normalization concept.
 
-## 核心公式
+## Core formulas
 
-实际读长由输入 FASTQ 逐条统计，不预设 100 或 150 bp。
+Read lengths are calculated directly from every FASTQ record. No fixed read length such as 100 or 150 bp is assumed.
 
 ```text
 16S_coverage = N_16S_total × combined_mean_read_length / 1432
@@ -39,23 +39,23 @@ ARG_copies_per_cell
   = KMA-reported_CARD_reference_Depth / cell_equivalent_coverage
 ```
 
-`1432 bp` 是 Zhu 等（2025）使用的平均细菌 16S rRNA 基因长度。ARG 分子只取 RGI-bwt/KMA 输出 `allele_mapping_data.txt` 的 `Depth` 字段。本流程将其明确称为 **KMA 报告的 CARD 参考序列深度**。
+The 1,432 bp reference length is the average bacterial 16S rRNA gene length used by Zhu et al. 2025. The ARG numerator is taken exclusively from the `Depth` field in the RGI-bwt/KMA `allele_mapping_data.txt` output. It is explicitly referred to as **KMA-reported CARD reference Depth**.
 
-以下项目不参与主计算：BAM 计算的平均深度、ARGs-OAP KO30 nCell、实验性 KMA-KO30 数据库、组装、ORF 预测、DIAMOND、BLASTX、DeepARG、Kraken2/Bracken。RGI 内部会生成 BAM 并调用 samtools/bamtools，但本流程的计算脚本不读取 BAM。
+The following are excluded from the primary calculation: BAM-derived mean depth, ARGs-OAP KO30 nCell, the experimental KMA-KO30 database, assembly, ORF prediction, DIAMOND, BLASTX, DeepARG, and Kraken2/Bracken. RGI internally generates BAM files and invokes samtools/bamtools, but the CARDCell calculation code does not read BAM files.
 
-## rrnDB 匹配规则
+## rrnDB matching
 
-Metaxa2 在 R1、R2 上分别识别细菌 SSU/16S 序列。群落相对丰度以全部细菌 16S 序列为分母：可鉴定到属时按属汇总；不能鉴定到属时保留最深的可靠分类层级。
+Metaxa2 identifies bacterial SSU/16S reads independently in R1 and R2. Community relative abundance is calculated using all bacterial 16S reads. Reads assigned to genus are summarized at genus level; otherwise, the deepest reliable taxonomic assignment is retained.
 
-rrnDB 使用第一个精确的 rank/name 匹配，顺序为：
+The first exact rank/name match in rrnDB is used in this order:
 
 ```text
-属 → 科 → 目 → 纲 → 门 → 域
+genus → family → order → class → phylum → domain
 ```
 
-每个回退层级写入 `04_rrnDB_copy_number.tsv`。不使用固定 4 或 4.1 替代缺失值。若存在未匹配丰度，只用匹配部分重新归一化来计算加权均值，并在结果中报告匹配/未匹配比例及是否发生重新归一化。
+Every fallback is recorded in `04_rrnDB_copy_number.tsv`. No arbitrary fixed value such as 4 or 4.1 is assigned to missing taxa. If unmatched abundance is present, the matched abundance is renormalized before calculating the weighted mean. The matched fraction, unmatched fraction, and renormalization status are reported.
 
-## 运行方法
+## Usage
 
 ```bash
 bin/cardoap_kma16s \
@@ -69,32 +69,32 @@ bin/cardoap_kma16s \
   --metaxa-env-bin /path/to/metaxa2_dependency_bin
 ```
 
-默认使用本仓库的 `resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv`。也可用 `--rrndb FILE` 指定当前官方 pan-taxa NCBI 统计表。CARD 不会自动下载或替换。
+By default, the pipeline uses `resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv`. A different current official pan-taxa NCBI statistics table can be supplied with `--rrndb FILE`. CARD is never downloaded or replaced automatically.
 
-RGI、Metaxa2 或数据库不在 PATH/默认位置时，分别用 `--rgi-bin`、`--card-local-db`、`--metaxa-dir` 和 `--metaxa-env-bin` 指定。查看全部参数：
+If RGI, Metaxa2, or their databases are not available in the default locations, specify them with `--rgi-bin`, `--card-local-db`, `--metaxa-dir`, and `--metaxa-env-bin`. To list all options:
 
 ```bash
 bin/cardoap_kma16s --help
 ```
 
-常用控制参数：
+Common options:
 
-- `--force`：只重建指定样本在本输出目录中的结果，不触碰输入或旧流程。
-- `--keep-temp`：保留解压后的临时 FASTQ。
-- 无 `--force` 时，如果 RGI 和 Metaxa2 的必需输出完整且非空，则自动续跑。
-- `--comparison-ko30`、`--comparison-previous-16s`、`--comparison-previous-16s-count`：只写验证比较表，绝不进入主公式。
+- `--force`: rebuild only the selected sample inside the specified output directory without modifying input data or other workflows.
+- `--keep-temp`: retain decompressed temporary FASTQ files.
+- Without `--force`, valid non-empty RGI and Metaxa2 outputs are detected and reused automatically.
+- `--comparison-ko30`, `--comparison-previous-16s`, and `--comparison-previous-16s-count`: write validation comparisons only; these values never enter the primary calculation.
 
-## QC 规则
+## Quality control
 
-默认阈值均为透明标记，不删除任何 ARG：
+Default thresholds produce transparent flags and never delete ARG detections:
 
-- 比对序列数 `< 3`：`LOW_MAPPED_READS_lt_3`
-- 覆盖百分比 `< 10%`：`LOW_PERCENT_COVERAGE_lt_10`
-- 细菌 16S 序列数 `< 100`：样本级标记 `LOW_16S_READS_lt_100`
+- mapped reads `< 3`: `LOW_MAPPED_READS_lt_3`
+- percent coverage `< 10%`: `LOW_PERCENT_COVERAGE_lt_10`
+- bacterial 16S reads `< 100`: sample-level `LOW_16S_READS_lt_100`
 
-阈值分别可用 `--qc-low-mapped-reads`、`--qc-low-percent-coverage`、`--qc-low-16s-reads` 调整。原始表与 QC 标记表同时保留。
+These thresholds can be adjusted with `--qc-low-mapped-reads`, `--qc-low-percent-coverage`, and `--qc-low-16s-reads`. Both raw and QC-flagged tables are retained.
 
-## 每个样本的输出
+## Per-sample outputs
 
 ```text
 results/SAMPLE_ID/
@@ -114,15 +114,13 @@ results/SAMPLE_ID/
 └── logs/
 ```
 
-`02_CARD_KMA_depth.tsv` 保留 CARD 模型、数据库、等位基因来源、完整/带侧翼/全部比对序列数、覆盖度、参考序列长度、KMA 深度和功能注释。`06` 是逐 CARD 参考序列的主定量结果。
+`02_CARD_KMA_depth.tsv` retains the CARD model, database, allele source, completely/flanking/all mapped-read counts, coverage metrics, reference length, KMA Depth, and functional annotations. The `06` tables contain the primary per-reference quantification results.
 
-`07_abundance_by_annotation.tsv` 对 ARO 条目直接求和；含多个标签的基因家族、药物类别或耐药机制采用**等比例分配**，避免同一参考序列因多个标签而被重复累计。
+In `07_abundance_by_annotation.tsv`, values are summed directly by ARO term. For gene family, drug class, and resistance mechanism fields containing multiple labels, each reference value is allocated equally among its labels to prevent duplicated abundance.
 
-## SRR6468562 验证
+## SRR6468562 validation example
 
-仓库提供可公开复现的 SRR6468562 双端 FASTQ 和结果实例，见 `examples/SRR6468562/`。测试结果来自重新读取 FASTQ、重新运行 RGI-bwt/KMA 和重新运行 Metaxa2。
-
-示例命令：
+The repository includes the paired SRR6468562 FASTQ files and compact expected results under `examples/SRR6468562/`. The validation results were generated by rereading the FASTQ files and independently rerunning RGI-bwt/KMA and Metaxa2.
 
 ```bash
 bin/cardoap_kma16s \
@@ -136,4 +134,4 @@ bin/cardoap_kma16s \
   --metaxa-env-bin /path/to/metaxa2_dependency_bin
 ```
 
-验证命令、运行输出和数值审计见 `workflow.log`；软件及数据库版本见 `environment_versions.txt`。
+The validation command, output, and numerical audit are documented in `workflow.log`. Software and database versions are listed in `environment_versions.txt`.
