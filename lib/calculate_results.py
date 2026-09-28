@@ -10,6 +10,7 @@ from pathlib import Path
 csv.field_size_limit(sys.maxsize)
 RANKS = ["domain", "phylum", "class", "order", "family", "genus", "species"]
 REFERENCE_16S_LENGTH = 1432.0
+DEFAULT_CARD_OAP_ANNOTATION = Path(__file__).resolve().parent.parent / "resources/CARD_OAP_full_6059_annotation.csv"
 
 
 def open_fastq(path):
@@ -90,6 +91,31 @@ def labels(text):
     return [x.strip() for x in text.split(";") if x.strip()] or ["Unspecified"]
 
 
+def normalize_aro(value):
+    value = value.strip()
+    return value if value.startswith("ARO:") else f"ARO:{value}"
+
+
+def card_oap_index(path):
+    required = {"Reference_ID", "ARO_Accession", "Class", "CARD_Drug_Class_raw"}
+    rows = []
+    with open(path, newline="", encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        missing = required - set(reader.fieldnames or [])
+        if missing:
+            raise ValueError(f"CARD-OAP annotation database is missing columns: {sorted(missing)}")
+        rows = list(reader)
+    result = {}
+    for row in rows:
+        aro = normalize_aro(row["ARO_Accession"])
+        if aro in result:
+            raise ValueError(f"Duplicate ARO accession in CARD-OAP annotation database: {aro}")
+        if not row["Class"].strip():
+            raise ValueError(f"Empty Class in CARD-OAP annotation database: {aro}")
+        result[aro] = row
+    return result, len(rows)
+
+
 def qc_flags(mapped_reads, percent_coverage, low_reads, low_coverage):
     flags = []
     if mapped_reads < low_reads:
@@ -104,6 +130,7 @@ def main():
     ap.add_argument("--r1", required=True); ap.add_argument("--r2", required=True)
     ap.add_argument("--sample", required=True); ap.add_argument("--sample-dir", required=True)
     ap.add_argument("--rrndb", required=True)
+    ap.add_argument("--card-oap-annotation", default=str(DEFAULT_CARD_OAP_ANNOTATION))
     ap.add_argument("--qc-low-mapped-reads", type=int, default=3)
     ap.add_argument("--qc-low-percent-coverage", type=float, default=10.0)
     ap.add_argument("--qc-low-16s-reads", type=int, default=100)
@@ -112,6 +139,7 @@ def main():
     ap.add_argument("--comparison-previous-16s-count", type=int)
     args = ap.parse_args()
     out = Path(args.sample_dir).resolve(); out.mkdir(parents=True, exist_ok=True)
+    annotation_db, annotation_db_size = card_oap_index(args.card_oap_annotation)
 
     r1_reads, r1_bases, r1_mean = fastq_stats(args.r1)
     r2_reads, r2_bases, r2_mean = fastq_stats(args.r2)
@@ -127,6 +155,8 @@ def main():
     card_rows = read_tsv(Path(str(prefix) + ".allele_mapping_data.txt"))
     depth_rows, qc_depth_rows = [], []
     for row in card_rows:
+        aro = normalize_aro(row["ARO Accession"])
+        annotation = annotation_db.get(aro)
         raw = {"sample": args.sample, "Reference_Sequence": row["Reference Sequence"], "ARO_Term": row["ARO Term"],
             "ARO_Accession": row["ARO Accession"], "Mapped_Reads": row["All Mapped Reads"],
             "Reference_Model_Type": row["Reference Model Type"], "Reference_DB": row["Reference DB"],
@@ -135,8 +165,12 @@ def main():
             "Mapped_Reads_with_Flanking_Sequence": row["Mapped Reads with Flanking Sequence"],
             "Percent_Coverage": row["Percent Coverage"], "Length_Coverage_bp": row["Length Coverage (bp)"],
             "Reference_Length": row["Reference Length"], "KMA_Depth": f"{float(row['Depth']):.12f}",
-            "AMR_Gene_Family": row["AMR Gene Family"], "Drug_Class": row["Drug Class"],
-            "Resistance_Mechanism": row["Resistance Mechanism"]}
+            "AMR_Gene_Family": row["AMR Gene Family"],
+            "Drug_Class": annotation["Class"].strip() if annotation else "Unmatched",
+            "Resistance_Mechanism": row["Resistance Mechanism"],
+            "_CARD_OAP_Match_Status": "ARO_exact" if annotation else "unmatched",
+            "_CARD_OAP_Reference_ID": annotation["Reference_ID"] if annotation else "",
+            "_CARD_OAP_Drug_Class_raw": annotation["CARD_Drug_Class_raw"] if annotation else ""}
         depth_rows.append(raw)
         flagged = dict(raw)
         flagged["QC_Flag"] = qc_flags(int(float(row["All Mapped Reads"])), float(row["Percent Coverage"]), args.qc_low_mapped_reads, args.qc_low_percent_coverage)
@@ -198,7 +232,10 @@ def main():
             "ARO_Accession": raw["ARO_Accession"], "KMA_Depth": raw["KMA_Depth"], "cell_equivalent_coverage": f"{cell_coverage:.12f}",
             "ARG_copies_per_cell": f"{depth/cell_coverage:.12f}", "Mapped_Reads": raw["Mapped_Reads"],
             "Percent_Coverage": raw["Percent_Coverage"], "AMR_Gene_Family": raw["AMR_Gene_Family"],
-            "Drug_Class": raw["Drug_Class"], "Resistance_Mechanism": raw["Resistance_Mechanism"]}
+            "Drug_Class": raw["Drug_Class"], "Resistance_Mechanism": raw["Resistance_Mechanism"],
+            "_CARD_OAP_Match_Status": raw["_CARD_OAP_Match_Status"],
+            "_CARD_OAP_Reference_ID": raw["_CARD_OAP_Reference_ID"],
+            "_CARD_OAP_Drug_Class_raw": raw["_CARD_OAP_Drug_Class_raw"]}
         copies_rows.append(result)
         flagged = dict(result); flagged["QC_Flag"] = qc["QC_Flag"]; flagged["QC_Action"] = qc["QC_Action"]
         qc_copies_rows.append(flagged)
@@ -209,25 +246,48 @@ def main():
     total_depth = sum(float(x["KMA_Depth"]) for x in copies_rows)
     total_copies = sum(float(x["ARG_copies_per_cell"]) for x in copies_rows)
     aro_count = len({x["ARO_Accession"] for x in copies_rows})
+    annotation_matched = sum(x["_CARD_OAP_Match_Status"] == "ARO_exact" for x in copies_rows)
+    matched_copies = sum(float(x["ARG_copies_per_cell"]) for x in copies_rows if x["_CARD_OAP_Match_Status"] == "ARO_exact")
+    annotation_abundance_fraction = matched_copies / total_copies if total_copies else 0.0
     sample_flag = f"LOW_16S_READS_lt_{args.qc_low_16s_reads}" if n16s < args.qc_low_16s_reads else "PASS"
-    write_tsv(out / "07_sample_summary.tsv", ["sample", "total_reads", "mean_read_length", "N_16S_reads", "16S_coverage", "weighted_mean_16S_copy_number", "cell_equivalent_coverage", "number_CARD_references_detected", "number_ARO_terms_detected", "total_KMA_ARG_Depth", "total_ARG_copies_per_cell", "sample_16S_QC_flag"], [{
+    write_tsv(out / "07_sample_summary.tsv", ["sample", "total_reads", "mean_read_length", "N_16S_reads", "16S_coverage", "weighted_mean_16S_copy_number", "cell_equivalent_coverage", "number_CARD_references_detected", "number_ARO_terms_detected", "CARD_OAP_annotation_database_entries", "CARD_OAP_references_matched", "CARD_OAP_reference_match_fraction", "CARD_OAP_abundance_match_fraction", "total_KMA_ARG_Depth", "total_ARG_copies_per_cell", "sample_16S_QC_flag"], [{
         "sample": args.sample, "total_reads": total_reads, "mean_read_length": f"{combined_mean:.12f}", "N_16S_reads": n16s,
         "16S_coverage": f"{coverage16s:.12f}", "weighted_mean_16S_copy_number": f"{weighted_copy:.12f}",
         "cell_equivalent_coverage": f"{cell_coverage:.12f}", "number_CARD_references_detected": len(copies_rows),
-        "number_ARO_terms_detected": aro_count, "total_KMA_ARG_Depth": f"{total_depth:.12f}",
+        "number_ARO_terms_detected": aro_count, "CARD_OAP_annotation_database_entries": annotation_db_size,
+        "CARD_OAP_references_matched": annotation_matched,
+        "CARD_OAP_reference_match_fraction": f"{annotation_matched/len(copies_rows) if copies_rows else 0:.12f}",
+        "CARD_OAP_abundance_match_fraction": f"{annotation_abundance_fraction:.12f}",
+        "total_KMA_ARG_Depth": f"{total_depth:.12f}",
         "total_ARG_copies_per_cell": f"{total_copies:.12f}", "sample_16S_QC_flag": sample_flag}])
 
     summaries = []
     for level, field in [("ARO Term", "ARO_Term"), ("AMR Gene Family", "AMR_Gene_Family"), ("Drug Class", "Drug_Class"), ("Resistance Mechanism", "Resistance_Mechanism")]:
         agg = defaultdict(float)
         for row in copies_rows:
-            item_labels = [row[field]] if level == "ARO Term" else labels(row[field])
+            item_labels = [row[field]] if level in {"ARO Term", "Drug Class"} else labels(row[field])
             share = float(row["ARG_copies_per_cell"]) / len(item_labels)
             for label in item_labels: agg[label] += share
         for label, value in sorted(agg.items(), key=lambda x: (-x[1], x[0])):
             summaries.append({"Summary_Level": level, "Label": label, "ARG_copies_per_cell": f"{value:.12f}",
-                "Aggregation_Rule": "sum reference values by ARO term" if level == "ARO Term" else "fractional allocation across multiple labels"})
+                "Aggregation_Rule": "sum full reference values by unique label" if level in {"ARO Term", "Drug Class"} else "fractional allocation across multiple labels"})
     write_tsv(out / "07_abundance_by_annotation.tsv", ["Summary_Level", "Label", "ARG_copies_per_cell", "Aggregation_Rule"], summaries)
+
+    class_agg = defaultdict(float)
+    for row in copies_rows:
+        class_agg[row["Drug_Class"]] += float(row["ARG_copies_per_cell"])
+    class_rows = [{"sample": args.sample, "Drug_Class": label,
+        "ARG_copies_per_cell": f"{value:.12f}",
+        "fraction_of_total_ARG_copies_per_cell": f"{value/total_copies if total_copies else 0:.12f}"}
+        for label, value in sorted(class_agg.items(), key=lambda x: (-x[1], x[0]))]
+    write_tsv(out / "08_Drug_Class_abundance.tsv", ["sample", "Drug_Class", "ARG_copies_per_cell", "fraction_of_total_ARG_copies_per_cell"], class_rows)
+    audit_rows = [{"sample": args.sample, "Reference_Sequence": row["Reference_Sequence"],
+        "ARO_Accession": normalize_aro(row["ARO_Accession"]), "ARO_Term": row["ARO_Term"],
+        "Drug_Class": row["Drug_Class"], "Match_Status": row["_CARD_OAP_Match_Status"],
+        "Annotation_Reference_ID": row["_CARD_OAP_Reference_ID"],
+        "Annotation_CARD_Drug_Class_raw": row["_CARD_OAP_Drug_Class_raw"],
+        "ARG_copies_per_cell": row["ARG_copies_per_cell"]} for row in copies_rows]
+    write_tsv(out / "09_CARD_OAP_annotation_audit.tsv", ["sample", "Reference_Sequence", "ARO_Accession", "ARO_Term", "Drug_Class", "Match_Status", "Annotation_Reference_ID", "Annotation_CARD_Drug_Class_raw", "ARG_copies_per_cell"], audit_rows)
 
     validation = [
         {"Metric": "new_16S_derived_cell_equivalent_coverage", "Value": f"{cell_coverage:.12f}", "Use": "primary denominator"},
@@ -248,6 +308,7 @@ def main():
     print(f"Bacterial 16S reads: {n16s}"); print(f"16S coverage: {coverage16s:.12f}")
     print(f"Weighted mean 16S copies/cell: {weighted_copy:.12f}"); print(f"Cell-equivalent coverage: {cell_coverage:.12f}")
     print(f"CARD references detected: {len(copies_rows)}"); print(f"ARO terms detected: {aro_count}")
+    print(f"CARD-OAP annotation matches: {annotation_matched}/{len(copies_rows)}")
     print(f"Total KMA ARG Depth: {total_depth:.12f}"); print(f"Total ARG copies/cell: {total_copies:.12f}")
     print("ARG copies/cell formula: KMA Depth / 16S-derived cell-equivalent coverage")
     if args.comparison_previous_16s is not None:

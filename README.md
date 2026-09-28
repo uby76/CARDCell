@@ -10,7 +10,7 @@ cd CARDCell
 chmod +x bin/cardoap_kma16s
 ```
 
-Requirements include Python 3.9 or later, RGI with its KMA, samtools, and bamtools runtime dependencies, a loaded canonical CARD local database, and Metaxa2 2.2.3 with its SSU database. The rrnDB 5.10 pan-taxa NCBI statistics table is included. CARD and Metaxa2 databases are not downloaded or replaced automatically.
+Requirements include Python 3.9 or later, RGI with its KMA, samtools, and bamtools runtime dependencies, a loaded canonical CARD local database, and Metaxa2 2.2.3 with its SSU database. The rrnDB 5.10 pan-taxa NCBI statistics table and the 6,059-entry CARD-OAP class annotation database are included. Users do not need to download or reorganize the class annotation table. CARD and Metaxa2 databases are not downloaded or replaced automatically.
 
 ## Method overview
 
@@ -18,6 +18,7 @@ Requirements include Python 3.9 or later, RGI with its KMA, samtools, and bamtoo
 ARG numerator: FASTQ → RGI-bwt/KMA → CARD → KMA-reported CARD reference Depth
 Cell denominator: FASTQ → Metaxa2 bacterial 16S → 16S coverage → taxonomy → rrnDB → cell-equivalent coverage
 Final result: ARG copies/cell = KMA Depth / cell-equivalent coverage
+ARG class: ARO accession → bundled CARD-OAP database → one Drug_Class per reference
 ```
 
 The pipeline combines **CARD/KMA ARG profiling** with **[Zhu et al. 2025](https://doi.org/10.1038/s41467-025-59019-3)-style bacterial cell normalization based on 16S and rrnDB**. The complete pipeline should not be described as the original Zhu et al. 2025 workflow; only the cell denominator follows its 16S normalization concept.
@@ -71,6 +72,8 @@ bin/cardoap_kma16s \
 
 By default, the pipeline uses `resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv`. A different current official pan-taxa NCBI statistics table can be supplied with `--rrndb FILE`. CARD is never downloaded or replaced automatically.
 
+The pipeline also uses `resources/CARD_OAP_full_6059_annotation.csv` automatically. Its `Class` field directly replaces the original multi-label CARD/RGI `Drug Class` field in all primary result tables. Matching is performed by exact ARO accession. The bundled database contains one unique class for each of 6,059 ARO accessions, so no fractional allocation across multiple drug classes is used. An alternative compatible table can be supplied with `--card-oap-annotation FILE`, but no separate download is required for normal use.
+
 If RGI, Metaxa2, or their databases are not available in the default locations, specify them with `--rgi-bin`, `--card-local-db`, `--metaxa-dir`, and `--metaxa-env-bin`. To list all options:
 
 ```bash
@@ -108,15 +111,17 @@ results/SAMPLE_ID/
 ├── 06_ARG_copies_per_cell_QC.tsv
 ├── 07_sample_summary.tsv
 ├── 07_abundance_by_annotation.tsv
+├── 08_Drug_Class_abundance.tsv
+├── 09_CARD_OAP_annotation_audit.tsv
 ├── validation_comparison.tsv
 ├── rgi_bwt/
 ├── metaxa2/
 └── logs/
 ```
 
-`02_CARD_KMA_depth.tsv` retains the CARD model, database, allele source, completely/flanking/all mapped-read counts, coverage metrics, reference length, KMA Depth, and functional annotations. The `06` tables contain the primary per-reference quantification results.
+`02_CARD_KMA_depth.tsv` retains the CARD model, database, allele source, completely/flanking/all mapped-read counts, coverage metrics, reference length, KMA Depth, and functional annotations. The `Drug_Class` column is the unique `Class` obtained from the bundled CARD-OAP annotation database, not the original multi-label RGI field. The `06` tables contain the primary per-reference quantification results.
 
-In `07_abundance_by_annotation.tsv`, values are summed directly by ARO term. For gene family, drug class, and resistance mechanism fields containing multiple labels, each reference value is allocated equally among its labels to prevent duplicated abundance.
+In `07_abundance_by_annotation.tsv`, values are summed directly by ARO term and by the unique bundled `Drug_Class`. Gene-family and resistance-mechanism fields containing multiple labels are still allocated equally among their labels to prevent duplicated abundance. `08_Drug_Class_abundance.tsv` is the concise class-level result. `09_CARD_OAP_annotation_audit.tsv` records the exact ARO match for every detected reference.
 
 ## SRR6468562 validation example
 

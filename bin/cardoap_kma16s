@@ -64,6 +64,8 @@ def main():
     ap.add_argument("--keep-temp", action="store_true")
     ap.add_argument("--card-local-db", default=os.environ.get("CARD_LOCAL_DB"))
     ap.add_argument("--rrndb", default=os.environ.get("RRNDB_TABLE"))
+    ap.add_argument("--card-oap-annotation", default=os.environ.get("CARD_OAP_ANNOTATION"),
+                    help="CARD-OAP one-class-per-ARO annotation CSV (default: bundled 6059-entry database)")
     ap.add_argument("--metaxa-dir", default=os.environ.get("METAXA2_DIR"))
     ap.add_argument("--metaxa-env-bin", default=os.environ.get("METAXA2_ENV_BIN"))
     ap.add_argument("--rgi-bin", default=os.environ.get("RGI_BIN"))
@@ -91,6 +93,9 @@ def main():
         raise SystemExit("Valid CARD localDB not found; supply --card-local-db. It will not be downloaded automatically.")
     rrndb = Path(args.rrndb).resolve() if args.rrndb else PIPELINE / "resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv"
     if not rrndb.is_file(): raise SystemExit("rrnDB pan-taxa table missing; supply --rrndb")
+    card_oap_annotation = Path(args.card_oap_annotation).resolve() if args.card_oap_annotation else PIPELINE / "resources/CARD_OAP_full_6059_annotation.csv"
+    if not card_oap_annotation.is_file():
+        raise SystemExit("Bundled CARD-OAP class annotation database is missing; supply --card-oap-annotation")
 
     metaxa_exe = shutil.which("metaxa2")
     metaxa = Path(args.metaxa_dir).resolve() if args.metaxa_dir else (Path(metaxa_exe).resolve().parent if metaxa_exe else Path("/nonexistent"))
@@ -131,6 +136,7 @@ def main():
     calc = PIPELINE / "lib/calculate_results.py"
     cmd = [sys.executable, str(calc), "--r1", str(r1), "--r2", str(r2), "--sample", args.sample,
            "--sample-dir", str(sample_dir), "--rrndb", str(rrndb),
+           "--card-oap-annotation", str(card_oap_annotation),
            "--qc-low-mapped-reads", str(args.qc_low_mapped_reads),
            "--qc-low-percent-coverage", str(args.qc_low_percent_coverage),
            "--qc-low-16s-reads", str(args.qc_low_16s_reads)]

@@ -14,6 +14,9 @@ Metaxa2 database: bundled SSU database supplied with Metaxa2 2.2.3
 rrnDB: 5.10 pan-taxa NCBI statistics table
 rrnDB file: resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv
 rrnDB SHA256: 1c564e212a060ba1095b992da5260a5d0dc7d70579d15bc567a2318f502a9a1e
+CARD-OAP class annotation: 6059 entries
+CARD-OAP class annotation file: resources/CARD_OAP_full_6059_annotation.csv
+CARD-OAP class annotation SHA256: 904cd04cf43e04841410cd2445652cebf236b857d0536f9d75b4e52d8e245fbb
 
 Calculation interpreter: Python 3.10.0
 16S reference length: 1432 bp

@@ -34,6 +34,8 @@ bin/cardoap_kma16s \
 
 The published compact outputs are stored under `expected_results/`. Large SAM/BAM files and temporary files are intentionally excluded.
 
+Drug classes are assigned directly from the repository's bundled `CARD_OAP_full_6059_annotation.csv` by exact ARO accession. The validation sample has 15/15 exact annotation matches.
+
 Expected headline results:
 
 ```text

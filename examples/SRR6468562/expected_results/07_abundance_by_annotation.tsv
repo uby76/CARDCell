@@ -1,19 +1,19 @@
 Summary_Level	Label	ARG_copies_per_cell	Aggregation_Rule
-ARO Term	ErmF	0.185118703941	sum reference values by ARO term
-ARO Term	tet(Q)	0.170455836302	sum reference values by ARO term
-ARO Term	aadS	0.122801516476	sum reference values by ARO term
-ARO Term	CfxA2	0.102640073472	sum reference values by ARO term
-ARO Term	23S rRNA (adenine(2058)-N(6))-methyltransferase Erm(A)	0.100807215018	sum reference values by ARO term
-ARO Term	tet(X1)	0.067815762830	sum reference values by ARO term
-ARO Term	tet(X3)	0.064150045920	sum reference values by ARO term
-ARO Term	CRP	0.058651470556	sum reference values by ARO term
-ARO Term	MUN-1	0.040322886007	sum reference values by ARO term
-ARO Term	tet(M)	0.038490027552	sum reference values by ARO term
-ARO Term	emrK	0.034824310642	sum reference values by ARO term
-ARO Term	Mef(En2)	0.012830009184	sum reference values by ARO term
-ARO Term	Klebsiella pneumoniae KpnH	0.010997150729	sum reference values by ARO term
-ARO Term	Bifidobacterium adolescentis rpoB mutants conferring resistance to rifampicin	0.009164292274	sum reference values by ARO term
-ARO Term	BcII	0.007331433819	sum reference values by ARO term
+ARO Term	ErmF	0.185118703941	sum full reference values by unique label
+ARO Term	tet(Q)	0.170455836302	sum full reference values by unique label
+ARO Term	aadS	0.122801516476	sum full reference values by unique label
+ARO Term	CfxA2	0.102640073472	sum full reference values by unique label
+ARO Term	23S rRNA (adenine(2058)-N(6))-methyltransferase Erm(A)	0.100807215018	sum full reference values by unique label
+ARO Term	tet(X1)	0.067815762830	sum full reference values by unique label
+ARO Term	tet(X3)	0.064150045920	sum full reference values by unique label
+ARO Term	CRP	0.058651470556	sum full reference values by unique label
+ARO Term	MUN-1	0.040322886007	sum full reference values by unique label
+ARO Term	tet(M)	0.038490027552	sum full reference values by unique label
+ARO Term	emrK	0.034824310642	sum full reference values by unique label
+ARO Term	Mef(En2)	0.012830009184	sum full reference values by unique label
+ARO Term	Klebsiella pneumoniae KpnH	0.010997150729	sum full reference values by unique label
+ARO Term	Bifidobacterium adolescentis rpoB mutants conferring resistance to rifampicin	0.009164292274	sum full reference values by unique label
+ARO Term	BcII	0.007331433819	sum full reference values by unique label
 AMR Gene Family	Erm-like 23S rRNA methyltransferase	0.285925918959	fractional allocation across multiple labels
 AMR Gene Family	tetracycline-resistant ribosomal protection protein	0.208945863854	fractional allocation across multiple labels
 AMR Gene Family	tetracycline inactivation enzyme	0.131965808750	fractional allocation across multiple labels
@@ -25,19 +25,12 @@ AMR Gene Family	antibiotic efflux regulatory protein	0.029325735278	fractional a
 AMR Gene Family	resistance-nodulation-cell division (RND) antibiotic efflux pump	0.029325735278	fractional allocation across multiple labels
 AMR Gene Family	rifamycin-resistant beta-subunit of RNA polymerase (rpoB)	0.009164292274	fractional allocation across multiple labels
 AMR Gene Family	subclass B1 Bacillus cereus Bc beta-lactamase	0.007331433819	fractional allocation across multiple labels
-Drug Class	tetracycline antibiotic	0.343660960286	fractional allocation across multiple labels
-Drug Class	cephalosporin	0.148003320230	fractional allocation across multiple labels
-Drug Class	aminoglycoside antibiotic	0.124176160317	fractional allocation across multiple labels
-Drug Class	macrolide antibiotic	0.122648778271	fractional allocation across multiple labels
-Drug Class	lincosamide antibiotic	0.101723644245	fractional allocation across multiple labels
-Drug Class	streptogramin antibiotic	0.095308639653	fractional allocation across multiple labels
-Drug Class	glycylcycline	0.032075022960	fractional allocation across multiple labels
-Drug Class	penicillin beta-lactam	0.024590850936	fractional allocation across multiple labels
-Drug Class	fluoroquinolone antibiotic	0.020925134026	fractional allocation across multiple labels
-Drug Class	rifamycin antibiotic	0.009164292274	fractional allocation across multiple labels
-Drug Class	carbapenem	0.001374643841	fractional allocation across multiple labels
-Drug Class	nonribosomal peptide antibiotics	0.001374643841	fractional allocation across multiple labels
-Drug Class	peptide antibiotic	0.001374643841	fractional allocation across multiple labels
+Drug Class	Tetracycline	0.311585937326	sum full reference values by unique label
+Drug Class	MLS	0.298755928143	sum full reference values by unique label
+Drug Class	Beta-lactam	0.150294393298	sum full reference values by unique label
+Drug Class	Multidrug	0.133798667205	sum full reference values by unique label
+Drug Class	Aminoglycoside	0.122801516476	sum full reference values by unique label
+Drug Class	Rifamycin	0.009164292274	sum full reference values by unique label
 Resistance Mechanism	antibiotic inactivation	0.405061718524	fractional allocation across multiple labels
 Resistance Mechanism	antibiotic target alteration	0.290508065096	fractional allocation across multiple labels
 Resistance Mechanism	antibiotic target protection	0.208945863854	fractional allocation across multiple labels

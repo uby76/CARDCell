@@ -1,0 +1,16 @@
+sample	Reference_Sequence	ARO_Accession	ARO_Term	Drug_Class	Match_Status	Annotation_Reference_ID	Annotation_CARD_Drug_Class_raw	ARG_copies_per_cell
+SRR6468562	ARO:3000206|ID:609|Name:emrK|NCBI:D78168.1	ARO:3000206	emrK	Tetracycline	ARO_exact	CARD_MSEQ_173	tetracycline antibiotic	0.034824310642
+SRR6468562	ARO:3000498|ID:621|Name:ErmF|NCBI:M17124.1	ARO:3000498	ErmF	MLS	ARO_exact	CARD_MSEQ_593	lincosamide antibiotic;macrolide antibiotic;streptogramin antibiotic	0.185118703941
+SRR6468562	ARO:3003002|ID:174|Name:CfxA2|NCBI:AF118110.1	ARO:3003002	CfxA2	Beta-lactam	ARO_exact	CARD_MSEQ_4470	cephalosporin	0.102640073472
+SRR6468562	ARO:3000518|ID:869|Name:CRP|NCBI:AP009048.1	ARO:3000518	CRP	Multidrug	ARO_exact	CARD_MSEQ_4752	fluoroquinolone antibiotic;macrolide antibiotic;penicillin beta-lactam	0.058651470556
+SRR6468562	ARO:3002878|ID:1336|Name:BcII|NCBI:M19530.1	ARO:3002878	BcII	Beta-lactam	ARO_exact	CARD_MSEQ_1699	cephalosporin;penicillin beta-lactam	0.007331433819
+SRR6468562	ARO:3000191|ID:1183|Name:tet(Q)|NCBI:Z21523.1	ARO:3000191	tet(Q)	Tetracycline	ARO_exact	CARD_MSEQ_476	tetracycline antibiotic	0.170455836302
+SRR6468562	ARO:3004659|ID:3359|Name:Mef(En2)|NCBI:AF251288.1	ARO:3004659	Mef(En2)	MLS	ARO_exact	CARD_MSEQ_5539	lincosamide antibiotic;macrolide antibiotic	0.012830009184
+SRR6468562	ARO:3004683|ID:3382|Name:aadS|NCBI:M72415.1	ARO:3004683	aadS	Aminoglycoside	ARO_exact	CARD_MSEQ_5568	aminoglycoside antibiotic	0.122801516476
+SRR6468562	ARO:3000186|ID:1692|Name:tet(M)|NCBI:AB039845.1	ARO:3000186	tet(M)	Tetracycline	ARO_exact	CARD_MSEQ_6139	tetracycline antibiotic	0.038490027552
+SRR6468562	ARO:3004597|ID:3299|Name:Klebsiella_pneumoniae_KpnH|NCBI:ASTU01000063.1	ARO:3004597	Klebsiella pneumoniae KpnH	Multidrug	ARO_exact	CARD_MSEQ_5310	aminoglycoside antibiotic;carbapenem;cephalosporin;fluoroquinolone antibiotic;macrolide antibiotic;nonribosomal peptide antibiotics;penicillin beta-lactam;peptide antibiotic	0.010997150729
+SRR6468562	ARO:3005099|ID:3831|Name:23S_rRNA_(adenine(2058)-N(6))-methyltransferase_Erm(A)|NCBI:AF002716.1	ARO:3005099	23S rRNA (adenine(2058)-N(6))-methyltransferase Erm(A)	MLS	ARO_exact	CARD_MSEQ_6143	lincosamide antibiotic;macrolide antibiotic;streptogramin antibiotic	0.100807215018
+SRR6468562	ARO:3004480|ID:2914|Name:Bifidobacterium_adolescentis_rpoB_mutants_conferring_resistance_to_rifampicin|NCBI:NC_008618.1	ARO:3004480	Bifidobacterium adolescentis rpoB mutants conferring resistance to rifampicin	Rifamycin	ARO_exact	CARD_MSEQ_5874	rifamycin antibiotic	0.009164292274
+SRR6468562	ARO:3005166|ID:3888|Name:tet(X1)|NCBI:AJ311171.1	ARO:3005166	tet(X1)	Tetracycline	ARO_exact	CARD_MSEQ_6215	tetracycline antibiotic	0.067815762830
+SRR6468562	ARO:3004719|ID:3401|Name:tet(X3)|NCBI:MK134375.1	ARO:3004719	tet(X3)	Multidrug	ARO_exact	CARD_MSEQ_5596	glycylcycline;tetracycline antibiotic	0.064150045920
+SRR6468562	ARO:3008394|ID:7812|Name:MUN-1|NCBI:PP229523.1	ARO:3008394	MUN-1	Beta-lactam	ARO_exact	CARD_MSEQ_10639	cephalosporin	0.040322886007
