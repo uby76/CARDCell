@@ -1,0 +1,10 @@
+Metric	Value	Use
+new_16S_derived_cell_equivalent_coverage	5.455958682164	primary denominator
+matched_abundance_fraction	1.000000000000	rrnDB QC
+unmatched_abundance_fraction	0.000000000000	rrnDB QC
+matched_abundances_renormalized	no_not_needed	method record
+previous_16S_derived_cell_equivalent_coverage	5.455958682164	comparison only
+new_minus_previous_16S_difference	0.000000000000	comparison only
+agreement_with_previous_16S_read_count	yes	comparison only
+ARGsOAP_KO30_nCell	6.838364315070631	comparison only; never denominator
+16S_to_KO30_ratio	0.797845571073	comparison only

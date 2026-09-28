@@ -1,0 +1,148 @@
+#!/usr/bin/env python3
+import argparse
+import gzip
+import os
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+PIPELINE = Path(__file__).resolve().parent.parent
+
+
+def executable(name, explicit=None):
+    candidates = [explicit, shutil.which(name), f"/opt/homebrew/Caskroom/miniconda/base/envs/rgi/bin/{name}"]
+    for value in candidates:
+        if value and Path(value).is_file() and os.access(value, os.X_OK):
+            return str(Path(value).resolve())
+    raise SystemExit(f"Required executable not found: {name}. Use --{name.replace('_','-')}-bin or PATH.")
+
+
+def run_logged(cmd, log, cwd=None, env=None):
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with log.open("w") as handle:
+        proc = subprocess.Popen(cmd, cwd=cwd, env=env, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        for line in proc.stdout:
+            sys.stdout.write(line); handle.write(line)
+        code = proc.wait()
+    if code:
+        raise SystemExit(f"Command failed ({code}); see {log}")
+
+
+def valid_files(paths):
+    return all(Path(x).is_file() and Path(x).stat().st_size > 0 for x in paths)
+
+
+def open_text(path):
+    return gzip.open(path, "rt") if str(path).endswith(".gz") else open(path)
+
+
+def validate_pair_names(r1, r2):
+    with open_text(r1) as a, open_text(r2) as b:
+        n = 0
+        while True:
+            h1, h2 = a.readline(), b.readline()
+            if not h1 and not h2: break
+            if not h1 or not h2: raise SystemExit("Paired FASTQ files contain different numbers of records")
+            n += 1
+            id1 = h1[1:].split()[0].removesuffix("/1")
+            id2 = h2[1:].split()[0].removesuffix("/2")
+            if not h1.startswith("@") or not h2.startswith("@") or id1 != id2:
+                raise SystemExit(f"Paired FASTQ identifier mismatch at pair {n}")
+            for handle in (a, b):
+                seq, plus, qual = handle.readline(), handle.readline(), handle.readline()
+                if not seq or not plus.startswith("+") or not qual or len(seq.rstrip()) != len(qual.rstrip()):
+                    raise SystemExit(f"Invalid FASTQ structure at pair {n}")
+    return n
+
+
+def main():
+    ap = argparse.ArgumentParser(description="CARD/RGI-bwt/KMA plus Metaxa2/rrnDB ARG copies-per-cell pipeline")
+    ap.add_argument("--r1", required=True); ap.add_argument("--r2", required=True)
+    ap.add_argument("--sample", required=True); ap.add_argument("--outdir", required=True)
+    ap.add_argument("--threads", type=int, default=8); ap.add_argument("--force", action="store_true")
+    ap.add_argument("--keep-temp", action="store_true")
+    ap.add_argument("--card-local-db", default=os.environ.get("CARD_LOCAL_DB"))
+    ap.add_argument("--rrndb", default=os.environ.get("RRNDB_TABLE"))
+    ap.add_argument("--metaxa-dir", default=os.environ.get("METAXA2_DIR"))
+    ap.add_argument("--metaxa-env-bin", default=os.environ.get("METAXA2_ENV_BIN"))
+    ap.add_argument("--rgi-bin", default=os.environ.get("RGI_BIN"))
+    ap.add_argument("--qc-low-mapped-reads", type=int, default=3,
+                    help="flag CARD references with fewer mapped reads (default: 3; no filtering)")
+    ap.add_argument("--qc-low-percent-coverage", type=float, default=10.0,
+                    help="flag CARD references below this reference coverage percentage (default: 10; no filtering)")
+    ap.add_argument("--qc-low-16s-reads", type=int, default=100,
+                    help="flag samples with fewer bacterial 16S reads (default: 100; no filtering)")
+    ap.add_argument("--comparison-ko30", type=float, help="optional comparison only; never used as denominator")
+    ap.add_argument("--comparison-previous-16s", type=float, help="optional validation reference only")
+    ap.add_argument("--comparison-previous-16s-count", type=int, help="optional validation read-count reference only")
+    args = ap.parse_args()
+    r1, r2 = Path(args.r1).resolve(), Path(args.r2).resolve()
+    if not r1.is_file() or not r2.is_file(): raise SystemExit("R1 or R2 input is missing")
+    if args.threads < 1: raise SystemExit("--threads must be >= 1")
+    sample_dir = Path(args.outdir).resolve() / args.sample
+    rgi_dir, metaxa_out, logs, tmp = [sample_dir / x for x in ("rgi_bwt", "metaxa2", "logs", "tmp")]
+    for d in (rgi_dir, metaxa_out, logs, tmp): d.mkdir(parents=True, exist_ok=True)
+    print(f"Validated {validate_pair_names(r1, r2)} read pairs")
+
+    rgi = executable("rgi", args.rgi_bin)
+    card_db = Path(args.card_local_db).resolve() if args.card_local_db else (PIPELINE.parent / "localDB").resolve()
+    if not valid_files([card_db / "card.json", card_db / "card_reference.fasta"]):
+        raise SystemExit("Valid CARD localDB not found; supply --card-local-db. It will not be downloaded automatically.")
+    rrndb = Path(args.rrndb).resolve() if args.rrndb else PIPELINE / "resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv"
+    if not rrndb.is_file(): raise SystemExit("rrnDB pan-taxa table missing; supply --rrndb")
+
+    metaxa_exe = shutil.which("metaxa2")
+    metaxa = Path(args.metaxa_dir).resolve() if args.metaxa_dir else (Path(metaxa_exe).resolve().parent if metaxa_exe else Path("/nonexistent"))
+    if not valid_files([metaxa / "metaxa2", metaxa / "metaxa2_db/SSU/HMMs/B.hmm", metaxa / "metaxa2_db/SSU/blast.nhr"]):
+        raise SystemExit("Metaxa2 program/SSU database missing; supply --metaxa-dir")
+    hmmscan_exe = shutil.which("hmmscan")
+    metaxa_env_bin = Path(args.metaxa_env_bin).resolve() if args.metaxa_env_bin else (Path(hmmscan_exe).resolve().parent if hmmscan_exe else Path("/nonexistent"))
+    if not (metaxa_env_bin / "hmmscan").is_file(): raise SystemExit("Metaxa2 dependency bin missing; supply --metaxa-env-bin")
+
+    prefix = rgi_dir / args.sample
+    rgi_required = [Path(str(prefix)+x) for x in (".allele_mapping_data.txt", ".gene_mapping_data.txt", ".sorted.length_100.bam", ".sorted.length_100.bam.bai", ".temp.sam.temp.res", ".temp.sam.temp.aln")]
+    if args.force:
+        for f in rgi_dir.glob(args.sample + "*"): f.unlink()
+    if not valid_files(rgi_required):
+        rgi_env = os.environ.copy()
+        rgi_env["PATH"] = str(Path(rgi).parent) + os.pathsep + rgi_env.get("PATH", "")
+        for dependency in ("kma", "samtools", "bamtools"):
+            if not shutil.which(dependency, path=rgi_env["PATH"]):
+                raise SystemExit(f"RGI runtime dependency not found: {dependency} (searched beside RGI and in PATH)")
+        run_logged([rgi, "bwt", "--read_one", str(r1), "--read_two", str(r2), "--aligner", "kma", "--threads", str(args.threads), "--output_file", str(prefix), "--local"], logs/"rgi_bwt.log", cwd=card_db.parent, env=rgi_env)
+    else:
+        print("Resume: valid RGI-bwt outputs found; skipping mapping")
+
+    metaxa_required = [metaxa_out/f"{args.sample}_{mate}.taxonomy.txt" for mate in ("R1", "R2")]
+    if args.force:
+        for f in metaxa_out.glob(args.sample + "*"): f.unlink()
+    if not valid_files(metaxa_required):
+        env = os.environ.copy(); env["PATH"] = str(metaxa_env_bin) + os.pathsep + env.get("PATH", "")
+        for mate, source in (("R1", r1), ("R2", r2)):
+            temp_fastq = tmp / f"{args.sample}_{mate}.fastq"
+            with open_text(source) as src, temp_fastq.open("w") as dst: shutil.copyfileobj(src, dst)
+            out_prefix = metaxa_out / f"{args.sample}_{mate}"
+            cmd = [str(metaxa_env_bin/"perl"), str(metaxa/"metaxa2"), "-i", str(temp_fastq), "-o", str(out_prefix), "-f", "fastq", "-g", "ssu", "-t", "bacteria", "-p", str(metaxa/"metaxa2_db/SSU/HMMs"), "-d", str(metaxa/"metaxa2_db/SSU/blast"), "--plus", "T", "--cpu", str(args.threads), "--align", "none", "--taxonomy", "T", "--reltax", "T"]
+            run_logged(cmd, logs/f"metaxa2_{mate}.log", env=env)
+    else:
+        print("Resume: valid Metaxa2 outputs found; skipping 16S detection")
+
+    calc = PIPELINE / "lib/calculate_results.py"
+    cmd = [sys.executable, str(calc), "--r1", str(r1), "--r2", str(r2), "--sample", args.sample,
+           "--sample-dir", str(sample_dir), "--rrndb", str(rrndb),
+           "--qc-low-mapped-reads", str(args.qc_low_mapped_reads),
+           "--qc-low-percent-coverage", str(args.qc_low_percent_coverage),
+           "--qc-low-16s-reads", str(args.qc_low_16s_reads)]
+    if args.comparison_ko30 is not None: cmd += ["--comparison-ko30", str(args.comparison_ko30)]
+    if args.comparison_previous_16s is not None: cmd += ["--comparison-previous-16s", str(args.comparison_previous_16s)]
+    if args.comparison_previous_16s_count is not None: cmd += ["--comparison-previous-16s-count", str(args.comparison_previous_16s_count)]
+    run_logged(cmd, logs/"calculation.log")
+    if not args.keep_temp:
+        for f in tmp.glob("*.fastq"): f.unlink()
+    print(f"Pipeline directory: {PIPELINE}")
+    print(f"Result directory: {sample_dir}")
+
+
+if __name__ == "__main__":
+    main()

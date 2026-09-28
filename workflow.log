@@ -1,0 +1,64 @@
+CARDOAP_KMA_16S validation record
+Date: 2026-09-28
+Sample: SRR6468562
+
+PRIMARY WORKFLOW
+FASTQ -> RGI-bwt/KMA -> canonical CARD -> KMA-reported CARD reference Depth
+FASTQ -> Metaxa2 bacterial SSU/16S -> taxonomy -> rrnDB -> cell-equivalent coverage
+ARG copies/cell = KMA Depth / 16S-derived cell-equivalent coverage
+
+EXCLUDED FROM PRIMARY CALCULATION
+BAM-derived mean depth; ARGs-OAP KO30 nCell; experimental KMA-KO30 database;
+assembly; ORF prediction; DIAMOND; BLASTX; DeepARG; Kraken2/Bracken.
+
+VALIDATION COMMAND
+bin/cardoap_kma16s \
+  --r1 SRR6468562.nonhuman_R1.fastq.gz \
+  --r2 SRR6468562.nonhuman_R2.fastq.gz \
+  --sample SRR6468562 \
+  --outdir results \
+  --threads 8 \
+  --force \
+  --card-local-db "$PWD/localDB" \
+  --rrndb "$PWD/resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv" \
+  --metaxa-dir "$PWD/Zhu2025_16S_nCell_SRR6468562/software/Metaxa2_2.2.3" \
+  --metaxa-env-bin "$PWD/Zhu2025_16S_nCell_SRR6468562/software/metaxa2_env/bin" \
+  --rgi-bin /opt/homebrew/Caskroom/miniconda/base/envs/rgi/bin/rgi \
+  --comparison-ko30 6.838364315070631 \
+  --comparison-previous-16s 5.455958682164 \
+  --comparison-previous-16s-count 406
+
+FORMULAS
+16S_coverage = N_16S_total * combined_mean_read_length / 1432
+weighted_mean_16S_copy_number = sum(relative_abundance_i * rrn_copy_number_i)
+cell_equivalent_coverage = 16S_coverage / weighted_mean_16S_copy_number
+ARG_copies_per_cell = KMA-reported_CARD_reference_Depth / cell_equivalent_coverage
+
+INDEPENDENT VALIDATION RESULT
+Sample: SRR6468562
+Total reads: 939550
+Combined mean read length: 96.212222872652
+Bacterial 16S reads: 406 (R1=200; R2=206)
+16S coverage: 27.278046428978
+Weighted mean 16S copies/cell: 4.999679802956
+Cell-equivalent coverage: 5.455958682164
+rrnDB-matched abundance fraction: 1.000000000000
+CARD references detected: 15
+ARO terms detected: 15
+Total KMA ARG Depth: 5.600000000000
+Total ARG copies/cell: 1.026400734722
+
+COMPARISON ONLY
+Previous 16S-derived cell-equivalent coverage: 5.455958682164
+New minus previous: 0.000000000000
+ARGs-OAP KO30 nCell: 6.838364315070631
+16S/KO30 ratio: 0.797845571073
+
+AUDIT
+FASTQ pair identifiers and record structure: PASS (469775 pairs)
+All per-reference ARG copies/cell ratios recomputed: PASS
+Sum of per-reference KMA Depth equals summary: PASS
+Sum of per-reference ARG copies/cell equals summary: PASS
+Taxonomic relative abundance sums to 1: PASS
+No fixed rrn copy-number substitution: PASS
+BAM not read by calculation code: PASS

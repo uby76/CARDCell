@@ -1,0 +1,19 @@
+Pipeline: CARDOAP_KMA_16S second method
+Validation date: 2026-09-28
+
+RGI: 6.0.8
+RGI aligner: KMA 1.6.17
+RGI runtime samtools: 1.22.1 (RGI internal output generation only; BAM not used in calculations)
+RGI runtime bamtools: 2.5.2 (RGI internal output generation only; BAM not used in calculations)
+CARD local database: 4.0.2, canonical card_reference.fasta, no WildCARD
+CARD card.json SHA256: d9a0576e6068762b224c9d3b0f6ec76083e3bfd7323e0f73d1584ef8e2ae7c0f
+CARD card_reference.fasta SHA256: 70af5105b7c1b9201d43904f41318e7141432c2558e260ba2bebdf78194e0b66
+
+Metaxa2: 2.2.3
+Metaxa2 database: bundled SSU database supplied with Metaxa2 2.2.3
+rrnDB: 5.10 pan-taxa NCBI statistics table
+rrnDB file: resources/rrnDB-5.10_pantaxa_stats_NCBI.tsv
+rrnDB SHA256: 1c564e212a060ba1095b992da5260a5d0dc7d70579d15bc567a2318f502a9a1e
+
+Calculation interpreter: Python 3.10.0
+16S reference length: 1432 bp

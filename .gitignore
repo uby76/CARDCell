@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+
+# User-generated runs can be large. The curated example is kept under examples/.
+results/
+
+# Common RGI/KMA/Metaxa2 intermediates
+*.sam
+*.bam
+*.bai
+*.frag.gz
+*.vcf.gz
+*.temp.txt
+*.coverage.temp.txt
+*.coverage_all_positions.temp.txt

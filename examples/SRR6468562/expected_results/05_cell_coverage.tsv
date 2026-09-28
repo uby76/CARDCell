@@ -1,0 +1,2 @@
+sample	N_16S_reads	mean_read_length	16S_reference_length	16S_coverage	weighted_mean_16S_copy_number	cell_equivalent_coverage	matched_taxonomic_abundance_fraction
+SRR6468562	406	96.212222872652	1432	27.278046428978	4.999679802956	5.455958682164	1.000000000000

@@ -1,0 +1,37 @@
+Taxon	Taxonomic_Rank	Relative_Abundance	rrnDB_Matched_Name	rrnDB_Matched_Rank	rrn_Copy_Number	Fallback_Level	Weighted_Contribution	Match_Status
+Fusobacterium	genus	0.453201970443	Fusobacterium	genus	5.840000	none	2.646699507389	matched
+Parvimonas	genus	0.150246305419	Parvimonas	genus	3.000000	none	0.450738916256	matched
+Bacteroides	genus	0.081280788177	Bacteroides	genus	4.840000	none	0.393399014778	matched
+Unclassified_Fusobacteriaceae	family	0.044334975369	Fusobacteriaceae	family	8.360000	family	0.370640394089	matched
+Peptostreptococcus	genus	0.024630541872	Peptostreptococcus	genus	5.000000	none	0.123152709360	matched
+Anaerococcus	genus	0.022167487685	Anaerococcus	genus	3.700000	none	0.082019704433	matched
+Unclassified_Bacteroidales	order	0.019704433498	Bacteroidales	order	3.630000	order	0.071527093596	matched
+Odoribacter	genus	0.014778325123	Odoribacter	genus	4.000000	none	0.059113300493	matched
+Peptoniphilus	genus	0.014778325123	Peptoniphilus	genus	3.000000	none	0.044334975369	matched
+Solobacterium	genus	0.014778325123	Solobacterium	genus	3.000000	none	0.044334975369	matched
+Unclassified_Family XI Incertae Sedis	family	0.014778325123	Clostridia	class	4.180000	class	0.061773399015	matched
+Unclassified_Clostridiales	order	0.012315270936	Clostridia	class	4.180000	class	0.051477832512	matched
+Finegoldia	genus	0.009852216749	Finegoldia	genus	4.000000	none	0.039408866995	matched
+Unclassified_Desulfovibrionaceae	family	0.009852216749	Desulfovibrionaceae	family	3.450000	family	0.033990147783	matched
+Unclassified_Firmicutes	phylum	0.009852216749	Bacteria	domain	2.040000	domain	0.020098522167	matched
+Unclassified_Bacteria	domain	0.007389162562	Bacteria	domain	2.040000	domain	0.015073891626	matched
+Unclassified_Coriobacteriaceae	family	0.007389162562	Coriobacteriaceae	family	2.880000	family	0.021280788177	matched
+Unclassified_Erysipelotrichaceae	family	0.007389162562	Erysipelotrichaceae	family	6.520000	family	0.048177339901	matched
+Unclassified_Peptostreptococcaceae	family	0.007389162562	Peptostreptococcaceae	family	12.470000	family	0.092142857143	matched
+Unclassified_Veillonellaceae	family	0.007389162562	Veillonellaceae	family	5.170000	family	0.038201970443	matched
+Barnesiella	genus	0.004926108374	Barnesiella	genus	5.000000	none	0.024630541872	matched
+Bilophila	genus	0.004926108374	Desulfovibrionaceae	family	3.450000	family	0.016995073892	matched
+Desulfovibrio	genus	0.004926108374	Desulfovibrio	genus	3.800000	none	0.018719211823	matched
+Dialister	genus	0.004926108374	Dialister	genus	5.000000	none	0.024630541872	matched
+Incertae Sedis	genus	0.004926108374	Lachnospiraceae	family	5.000000	family	0.024630541872	matched
+Parabacteroides	genus	0.004926108374	Parabacteroides	genus	6.540000	none	0.032216748768	matched
+Ruminococcus	genus	0.004926108374	Ruminococcus	genus	3.750000	none	0.018472906404	matched
+Subdoligranulum	genus	0.004926108374	Subdoligranulum	genus	4.000000	none	0.019704433498	matched
+Unclassified_Burkholderiales	order	0.004926108374	Burkholderiales	order	3.300000	order	0.016256157635	matched
+Unclassified_Lachnospiraceae	family	0.004926108374	Lachnospiraceae	family	5.000000	family	0.024630541872	matched
+Unclassified_Ruminococcaceae	family	0.004926108374	Clostridia	class	4.180000	class	0.020591133005	matched
+Actinomyces	genus	0.002463054187	Actinomyces	genus	3.000000	none	0.007389162562	matched
+Akkermansia	genus	0.002463054187	Akkermansia	genus	3.100000	none	0.007635467980	matched
+Alistipes	genus	0.002463054187	Alistipes	genus	2.080000	none	0.005123152709	matched
+Catenibacterium	genus	0.002463054187	Catenibacterium	genus	9.000000	none	0.022167487685	matched
+Unclassified_Porphyromonadaceae	family	0.002463054187	Porphyromonadaceae	family	3.370000	family	0.008300492611	matched
